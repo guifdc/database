@@ -1,0 +1,112 @@
+CREATE TABLE TIMEH
+(
+	timeh_id smallint not null,
+	timeh_nome varchar(30) not null,
+	primary key (timeh_id)
+);
+CREATE TABLE PREMIO
+(
+	premio_id smallint not null,
+	premio_nome varchar(30) not null,
+	premio_ano smallint not null,
+	timeh_id smallint not null,
+	primary key (premio_id),
+	foreign key (timeh_id) references timeh
+);
+CREATE TABLE JOGADOR
+(
+	data_nascimento date not null,
+	jogador_nome varchar(30) not null,
+	jogador_apelido varchar(15) not null,
+	jogador_id smallint not null,
+	primary key (jogador_id)
+);
+CREATE TABLE ATUAR
+(
+	timeh_id smallint not null,
+	jogador_id smallint not null,
+	primary key (timeh_id,jogador_id),
+	foreign key (timeh_id) references timeh,
+	foreign key (jogador_id) references jogador
+);
+CREATE TABLE TECNICO
+(
+	tecnico_id smallint not null,
+	tecnico_apelido varchar(15) not null,
+	data_nascimento date not null,
+	tecnico_nome varchar(30) not null,
+	primary key (tecnico_id)
+);
+CREATE TABLE TREINAR
+(
+	tecnico_id smallint not null,
+	timeh_id smallint not null,
+	data_inicio date not null,
+	data_termino date,
+	primary key (tecnico_id,timeh_id),
+	foreign key (timeh_id) references timeh,
+	foreign key (tecnico_id) references tecnico
+);
+CREATE TABLE ENDERECO
+(
+	endereco_id smallint not null,
+	estado varchar(30) not null,
+	cidade varchar(30) not null,
+	bairro varchar(30) not null,
+	localh varchar(30) not null,
+	primary key (endereco_id)
+);
+
+CREATE TABLE JOGO
+(
+	jogo_id smallint not null,
+	arbitro varchar(30) not null,
+	publico smallint,
+	datah varchar(10) not null,
+	renda_total varchar(15),
+	endereco_id smallint not null,
+	primary key (jogo_id),
+	foreign key (endereco_id) references endereco
+);
+CREATE TABLE ESTATISTICA
+(
+	timeh_id smallint not null,
+	jogo_id smallint not null,
+	set1_pontos decimal not null,
+	set2_pontos decimal not null,
+	set3_pontos decimal not null,
+	set4_pontos decimal,
+	set5_pontos decimal,
+	bloqueios_pts decimal,
+	saques_pts decimal,
+	primary key (timeh_id,jogo_id),
+	foreign key (timeh_id) references timeh,
+	foreign key (jogo_id) references jogo
+);
+CREATE TABLE JOGA
+(
+	jogador_id smallint not null,
+	jogo_id smallint not null,
+	primary key (jogador_id,jogo_id),
+	foreign key (jogador_id) references jogador,
+	foreign key (jogo_id) references jogo
+);
+
+/* A tabela abaixo armazena o id dos DOIS (EXATAMENTE) técnicos que estiveram em um jogo. O nome no modelo conceitual é ESTÁ (com acento agudo na letra a) mas para evitar problemas de acentuação foi escrito sem acento, ESTA. O correto entendimento é que passe a ideia de estado físico, verbo estar. Um técnico ESTÁ presente em um jogo. ESTA sem acento passa a ideia de lugar e não deve ser entendido desta forma. */
+
+CREATE TABLE ESTA
+(
+	tecnico_id smallint not null,
+	jogo_id smallint not null,
+	primary key (tecnico_id,jogo_id),
+	foreign key (tecnico_id) references tecnico,
+	foreign key (jogo_id) references jogo
+);
+CREATE TABLE PARTICIPA
+(
+	timeh_id smallint not null,
+	jogo_id smallint not null,
+	primary key (timeh_id,jogo_id),
+	foreign key (timeh_id) references timeh,
+	foreign key (jogo_id) references jogo
+);
