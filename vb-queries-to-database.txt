@@ -1,0 +1,155 @@
+3. Elaborar quatro consultas com duas tabelas usando group by com funções de agregação
+
+3.1 descrição da consulta: Verificar quantas vezes um timeh trocou de técnico.
+/* A informação é obtida através da contagem do campo treina.data_término. Cada vez que um timeh troca de técnico, este campo é preenchido. Se um timeh trocou de tecnico 2 vezes, é porque foi treinado por três técnicos. Do primeiro > segundo = 1 troca e do segundo > terceiro = 1 troca, logo 1+1=2. IMPORTANTE DESTACAR QUE O NUMERO DE TROCAR NÃO É A MESMA QUANTIDADE DE TECNICOS QUE UM TIME JÁ TEVE. O numero de trocas e determinado por Num_tec_treinou_um_time - 1. */
+
+select tm.timeh_id as id_do_time, tm.timeh_nome as time_nome, count(tr.data_termino) as vezes_trocou_tecnico
+from treinar tr inner join timeh tm
+on tr.timeh_id = tm.timeh_id 
+group by tm.timeh_nome, tm.timeh_id
+order by tr.data_termino
+
+
+3.2 descrição da consulta: Listar a quantidade de vezes que um tipo de prêmio obteve um vencedor diferente.
+/* Observação importante: Não é quantas vezes um único premio obteve vencedor diferente, isso não existe, um único prêmio só tem um único vencedor. a questão aqui e o nome/tipo do prêmio. Ex: Quantos timeh já ganharam o prêmio The volei Immortals.
+A consulta 3.2.2 foi colocada adicionalmente para mostra que apesar dessa consulta ser exatamente igual a consulta abaixo, cada uma retorna resultados completamente diferentes/distintos. */
+
+select pr.premio_nome, count(tm.timeh_id)as Num_Venced_diferentes
+from
+  timeh tm inner join premio pr
+   on tm.timeh_id = pr.timeh_id
+group by pr.premio_nome
+order by pr.premio_nome asc
+
+3.2.2 descrição da consulta: Listas a quantidade de premios que um time ganhou.
+/* Será listado somente os times que ganharam no mínimo um prêmio. */
+
+select tm.timeh_nome, count(pr.premio_id) as Qtd_premios
+from
+  timeh tm inner join premio pr
+   on tm.timeh_id = pr.timeh_id
+group by tm.timeh_nome, tm.timeh_id
+order by tm.timeh_nome
+
+3.3 descrição da consulta: Listar o total de publico em jogos por estado.
+
+select endc.estado, sum(jo.publico) as Total_publico
+from jogo jo, endereco endc
+   where jo.endereco_id = endc.endereco_id
+group by endc.estado
+
+3.4 descrição da consulta: Calcular o total de pontos de bloqueio feitos por times em todos os jogos.
+
+select  tm.timeh_nome,
+sum(bloqueios_pts) as total_pontos_bloqueio
+from estatistica est, timeh tm
+   where est.timeh_id = tm.timeh_id
+group by est.timeh_id, tm.timeh_nome
+order by tm.timeh_nome asc
+
+----------------------------------------------------
+
+4. Elaborar três consultas com três tabelas usando group by com funções de agregação
+
+4.1 descrição da consulta: calcular a somatório total de pessoas (publico) que assistiram jogos de cada timeh.
+/* Obs: os dados inseridos no BD sobre os times informam que cada time só teve registrado até o momento dois jogos e que o par do primeiro jogo se repetiu no segundo. Ex: jogo ID 1 entre time ID 100 e time ID 101. O jogo ID 2 também foi realizado pelo mesmo par do jogo ID 1 (times ID 100 e 101). Logo o somatório total do publico que foi ver estes dois times é igual, mas devido a LIMITAÇÃO DA QUANTIDADE DE DADOS INSERIDO NO BANCO E NÃO TEM RELAÇÃO COM A CONSULTA OU O MODELO DO BD. */
+
+select tm.timeh_nome, sum(jo.publico)as soma_total_publico
+from estatistica est inner join timeh tm
+on est.timeh_id = tm.timeh_id 
+inner join jogo jo
+on est.jogo_id = jo.jogo_id
+group by tm.timeh_nome
+order by tm.timeh_nome
+
+
+
+4.2 descrição consulta: calcular o menor publico presente em um jogo que o jogador Atila Guimaraes jogou e também do jogador Teodoro Fonseca.
+/* Para um jogador muito conhecido, esta consulta é útil para comparar a presença do público quando o jogador esteve presente em quadra e quando não esteve. */
+
+select jgdr.jogador_nome as jogador_nome, 
+   min(jo.publico) as menor_publico_presente
+from 
+  joga jg inner join jogo jo
+   on jg.jogo_id = jo.jogo_id 
+  inner join jogador jgdr
+   on jg.jogador_id = jgdr.jogador_id
+where jgdr.jogador_nome in('Teodoro Fonseca','Atila Guimaraes')
+group by  jgdr.jogador_nome, jgdr.jogador_id
+order by jo.publico asc
+
+4.3 consulta descrição: Listar a quantidade de jogadores por timeh que nasceram depois de 1982.
+
+select tm.timeh_nome, count(jgdr.jogador_id) as Qtd_jogadores
+from
+  atuar atr inner join jogador jgdr
+   on atr.jogador_id = jgdr.jogador_id
+  inner join timeh tm
+   on atr.timeh_id = tm.timeh_id
+where extract(year from jgdr.data_nascimento) > 1982
+group by tm.timeh_id, tm.timeh_nome
+
+------------------------------------------------------------
+
+5. Elaborar uma consulta com subconsulta
+
+5.1 descrição da consulta: Listar os times que tenham a media da soma dos 5 Sets maior que a media da soma dos 5 Sets geral/global (de todos os times).
+
+select tm.timeh_nome,
+avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos) as Media_Sets
+from 
+  estatistica est inner join timeh tm
+   on est.timeh_id = tm.timeh_id
+group by tm.timeh_nome, tm.timeh_id
+having avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos) >
+(
+select
+   avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos)
+from estatistica
+)
+order by tm.timeh_id
+
+UMA OUTRA CONSULTA MAIS ELABORADA COM JUNÇÃO DE QUATRO TABELAS que complementa a acima poderia ser:
+... mas a consulta destes times que serão listados deve ser limitada a jogos que tenham ocorrido no estado do Parana.
+
+select tm.timeh_nome, endc.estado,
+avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos) as Media_Sets
+from 
+  estatistica est inner join timeh tm
+   on est.timeh_id = tm.timeh_id
+  inner join jogo jo
+   on est.jogo_id = jo.jogo_id
+  inner join endereco endc
+   on endc.endereco_id = jo.endereco_id
+where endc.estado like 'Parana'
+group by tm.timeh_nome, tm.timeh_id, endc.estado
+having avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos) >
+(
+select
+   avg(set1_pontos+set2_pontos+set3_pontos+set4_pontos+set5_pontos)
+from estatistica
+)
+order by tm.timeh_id
+
+----------------------------------------------------------
+
+6. Elaborar uma exclusão
+
+6.1 descrição da exclusão: remover o registro do jogador Franjinha.
+
+Primeiro remover o registro na tabela atuar através de seu ID de jogador unico.
+delete from atuar
+where jogador_id = 145
+
+Somente apos a remoção acima é que é possível remover o registro do jogador Franjinha da tabela jogador.
+delete from jogador
+where jogador_id = 145 and jogador_apelido = 'Franjinha'
+
+
+7. Elaborar uma atualização
+
+7.1 descrição da atualização: atualizar um determinado endereço onde é realizado um jogo.
+
+update endereco
+set localh = 'Estrada linha reta n980'
+where endereco_id = 70
